@@ -5,7 +5,17 @@
 
   {{baremetal_vm_xml|default('')}}
 
-{% if libvirt_arch != 'aarch64' %}
+{% if libvirt_arch == 'aarch64' %}
+  <os firmware='efi'>
+    <type arch='aarch64' machine='virt-rhel8.2.0'>hvm</type>
+  </os>
+{% elif libvirt_arch == 'ppc64le' %}
+  <os>
+    <type arch='ppc64le' machine='pseries'>hvm</type>
+    <boot dev='network'/>
+    <bootmenu enable='no'/>
+  </os>
+{% else %}
   <os>
     <type arch='{{ libvirt_arch }}' machine='q35'>hvm</type>
 {% if libvirt_firmware  == 'uefi' %}
@@ -19,10 +29,6 @@
     <boot dev='network'/>
     <bootmenu enable='no'/>
   </os>
-{% else %}
-<os firmware='efi'>
-  <type arch='aarch64' machine='virt-rhel8.2.0'>hvm</type>
-</os>
 {% endif %}
 
   <features>
@@ -30,16 +36,24 @@
     <apic/>
     <pae/>
   </features>
+{% if libvirt_arch == 'ppc64le' %}
+  <cpu mode='custom' match='exact' check='none'>
+    <model fallback='forbid'>POWER9</model>
+  </cpu>
+{% else %}
   <cpu mode='host-passthrough'/>
+{% endif %}
   <clock offset='utc'/>
   <on_poweroff>destroy</on_poweroff>
   <on_reboot>restart</on_reboot>
   <on_crash>restart</on_crash>
   <devices>
+{% if libvirt_arch != 'ppc64le' %}
     <disk type="file" device="cdrom">
       <target dev='{{ libvirt_cdromdev }}' bus='{{ libvirt_cdrombus }}'/>
       <readonly/>
     </disk>
+{% endif %}
     <disk type='volume' device='disk'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source pool='{{ libvirt_volume_pool }}' volume='{{ item.name }}.qcow2'/>

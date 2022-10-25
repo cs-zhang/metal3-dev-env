@@ -58,7 +58,7 @@ packages:
       packages:
          - curl
          - dnsmasq
-         - edk2-ovmf
+         #- edk2-ovmf ## for x86_64 only
          - NetworkManager
          - nmap
          - patch
